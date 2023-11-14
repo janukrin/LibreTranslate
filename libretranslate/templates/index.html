@@ -11,9 +11,9 @@
 	<meta name="keywords" content="{{ _h('translation') }},{{ _h('api') }}">
 	{% endif %}
 
-	<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+	<link rel="shortcut icon" href="{{ url_for('static', filename='ataraxy.ico') }}">
 
-	<link rel="preload" href="{{ url_for('static', filename='icon.svg') }}" as="image" />
+	<link rel="preload" href="{{ url_for('static', filename='ataraxy.svg') }}" as="image" />
 	<link rel="preload" href="{{ url_for('static', filename='js/vue@2.js') }}" as="script">
 	<link rel="preload" href="{{ url_for('static', filename='js/materialize.min.js') }}" as="script">
 	<link rel="preload" href="{{ url_for('static', filename='js/prism.min.js') }}" as="script">
@@ -26,9 +26,9 @@
 
 	<meta property="og:title" content="LibreTranslate - {{ _h('Free and Open Source Machine Translation API') }}" />
 	<meta property="og:type" content="website" />
-	<meta property="og:url" content="https://libretranslate.com" />
+	<meta property="og:url" content="https://translate.ataraxy.site" />
 	<meta property="og:image" content="https://user-images.githubusercontent.com/1951843/102724116-32a6df00-42db-11eb-8cc0-129ab39cdfb5.png" />
-	<meta property="og:description" name="description" class="swiftype" content="{{ _h('Free and Open Source Machine Translation API. Self-hosted, offline capable and easy to setup. Run your own API server in just a few minutes.') }}"/>
+	<!--<meta property="og:description" name="description" class="swiftype" content="{{ _h('Free and Open Source Machine Translation API. Self-hosted, offline capable and easy to setup. Run your own API server in just a few minutes.') }}"/>-->
 
 	<script src="{{ url_for('static', filename='js/vue@2.js') }}"></script>
 
@@ -57,10 +57,10 @@
 			<div class="nav-wrapper container">
 				<button data-target="nav-mobile" class="sidenav-trigger"><i class="material-icons">menu</i></button>
 				<a id="logo-container" href="/" class="brand-logo noline">
-					<img src="{{ url_for('static', filename='icon.svg') }}" alt="" class="logo">
-					<span>LibreTranslate</span>
+					<img src="{{ url_for('static', filename='ataraxy.svg') }}" alt="" class="logo">
+					<span>Ataraxy Translate</span>
 				</a>
-				<ul id="nav" class="right hide-on-med-and-down top-nav position-relative">
+				<!--<ul id="nav" class="right hide-on-med-and-down top-nav position-relative">
 					{% set menulinks %}
 					<li><a href="{{ swagger_url }}">{{ _h("API Docs") }}</a></li>
 					{% if get_api_key_link %}
@@ -82,7 +82,7 @@
 					</li>
 					{% endset %}
 					{{ menulinks }}
-				</ul>
+				</ul>-->
 				<ul id="nav-mobile" class="sidenav">
 					{{ menulinks }}
 				</ul>
@@ -332,14 +332,15 @@
 		<div class="container">
 			<div class="row">
 				<div class="col l12 s12">
-					<h5 class="white-text">{{ _h("LibreTranslate") }}</h5>
-					<p class="grey-text text-lighten-4">{{ _h("Free and Open Source Machine Translation API") }}</p>
+					<h5 class="white-text">{{ _h("Ataraxy Translate") }}</h5>
+					<!--<p class="grey-text text-lighten-4">{{ _h("Free and Open Source Machine Translation API") }}</p>
 					<p>{{ _h("License:") }} <a class="grey-text text-lighten-4" href="https://www.gnu.org/licenses/agpl-3.0.en.html" rel="noopener noreferrer">AGPLv3</a></p>
 					{% if web_version %}
 					<p>
 						{{ _h("This public API should be used for testing, personal or infrequent use. If you're going to run an application in production, please %(host_server)s or %(get_api_key)s.", host_server='<a href="https://github.com/LibreTranslate/LibreTranslate" class="grey-text text-lighten-4" rel="noopener noreferrer">' + _h("host your own server") + '</a>', get_api_key='<a class="grey-text text-lighten-4" href="' + (get_api_key_link if get_api_key_link else "https://github.com/LibreTranslate/LibreTranslate#mirrors") + '" rel="noopener noreferrer">' + _h("get an API key") + '</a>') }}
 					</p>
 					{% endif %}
+					-->
 				</div>
 			</div>
 		</div>

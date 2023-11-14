@@ -8,6 +8,7 @@ from functools import wraps
 from html import unescape
 from timeit import default_timer
 
+import os.path
 import argostranslatefiles
 from argostranslatefiles import get_supported_formats
 from flask import Blueprint, Flask, Response, abort, jsonify, render_template, request, send_file, session, url_for
