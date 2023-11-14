@@ -104,7 +104,7 @@ def get_req_limits(default_limit, api_keys_db, multiplier=1):
     return req_limit
 
 
-def get_routes_limits(default_req_limit, daily_req_limit, api_keys_db):
+def get_routes_limits(default_req_limit, hourly_req_limit, daily_req_limit, api_keys_db):
     if default_req_limit == -1:
         # TODO: better way?
         default_req_limit = 9999999999999
@@ -112,10 +112,16 @@ def get_routes_limits(default_req_limit, daily_req_limit, api_keys_db):
     def minute_limits():
         return "%s per minute" % get_req_limits(default_req_limit, api_keys_db)
 
+    def hourly_limits():
+        return "%s per hour" % get_req_limits(hourly_req_limit, api_keys_db, int(os.environ.get("LT_HOURLY_REQ_LIMIT_MULTIPLIER", 60)))
+
     def daily_limits():
-        return "%s per day" % get_req_limits(daily_req_limit, api_keys_db, 1440)
+        return "%s per day" % get_req_limits(daily_req_limit, api_keys_db, int(os.environ.get("LT_DAILY_REQ_LIMIT_MULTIPLIER", 1440)))
 
     res = [minute_limits]
+
+    if hourly_req_limit > 0:
+      res.append(hourly_limits)
 
     if daily_req_limit > 0:
         res.append(daily_limits)
@@ -187,7 +193,7 @@ def create_app(args):
 
     api_keys_db = None
 
-    if args.req_limit > 0 or args.api_keys or args.daily_req_limit > 0:
+    if args.req_limit > 0 or args.api_keys or args.daily_req_limit > 0 or args.hourly_req_limit > 0:
         api_keys_db = None
         if args.api_keys:
             api_keys_db = RemoteDatabase(args.api_keys_remote) if args.api_keys_remote else Database(args.api_keys_db_path)
@@ -197,7 +203,7 @@ def create_app(args):
         limiter = Limiter(
             key_func=get_remote_address,
             default_limits=get_routes_limits(
-                args.req_limit, args.daily_req_limit, api_keys_db
+                args.req_limit, args.hourly_req_limit, args.daily_req_limit, api_keys_db
             ),
             storage_uri=args.req_limit_storage,
         )
@@ -556,18 +562,14 @@ def create_app(args):
 
         if source_lang == "auto":
             candidate_langs = detect_languages(q if batch else [q])
-            source_langs = [candidate_langs[0]]
+            detected_src_lang = candidate_langs[0]
         else:
-            if batch:
-                source_langs = [ {"confidence": 100.0, "language": source_lang} for text in q]
-            else:
-                source_langs = [ {"confidence": 100.0, "language": source_lang} ]
+            detected_src_lang = {"confidence": 100.0, "language": source_lang}
 
-        src_langs = [next(iter([l for l in languages if l.code == source_lang["language"]]), None) for source_lang in source_langs]
+        src_lang = next(iter([l for l in languages if l.code == detected_src_lang["language"]]), None)
 
-        for idx, lang in enumerate(src_langs):
-            if lang is None:
-                abort(400, description=_("%(lang)s is not supported", lang=source_langs[idx]))
+        if src_lang is None:
+            abort(400, description=_("%(lang)s is not supported", lang=source_lang))
 
         tgt_lang = next(iter([l for l in languages if l.code == target_lang]), None)
 
@@ -583,10 +585,10 @@ def create_app(args):
         try:
             if batch:
                 results = []
-                for idx, text in enumerate(q):
-                    translator = src_langs[idx].get_translation(tgt_lang)
+                for text in q:
+                    translator = src_lang.get_translation(tgt_lang)
                     if translator is None:
-                        abort(400, description=_("%(tname)s (%(tcode)s) is not available as a target language from %(sname)s (%(scode)s)", tname=_lazy(tgt_lang.name), tcode=tgt_lang.code, sname=_lazy(src_langs[idx].name), scode=src_langs[idx].code))
+                        abort(400, description=_("%(tname)s (%(tcode)s) is not available as a target language from %(sname)s (%(scode)s)", tname=_lazy(tgt_lang.name), tcode=tgt_lang.code, sname=_lazy(src_lang.name), scode=src_lang.code))
 
                     if text_format == "html":
                         translated_text = str(translate_html(translator, text))
@@ -598,7 +600,7 @@ def create_app(args):
                     return jsonify(
                         {
                             "translatedText": results,
-                            "detectedLanguage": source_langs
+                            "detectedLanguage": [detected_src_lang] * len(q)
                         }
                     )
                 else:
@@ -608,9 +610,9 @@ def create_app(args):
                           }
                     )
             else:
-                translator = src_langs[0].get_translation(tgt_lang)
+                translator = src_lang.get_translation(tgt_lang)
                 if translator is None:
-                    abort(400, description=_("%(tname)s (%(tcode)s) is not available as a target language from %(sname)s (%(scode)s)", tname=_lazy(tgt_lang.name), tcode=tgt_lang.code, sname=_lazy(src_langs[0].name), scode=src_langs[0].code))
+                    abort(400, description=_("%(tname)s (%(tcode)s) is not available as a target language from %(sname)s (%(scode)s)", tname=_lazy(tgt_lang.name), tcode=tgt_lang.code, sname=_lazy(src_lang.name), scode=src_lang.code))
 
                 if text_format == "html":
                     translated_text = str(translate_html(translator, q))
@@ -621,7 +623,7 @@ def create_app(args):
                     return jsonify(
                         {
                             "translatedText": unescape(translated_text),
-                            "detectedLanguage": source_langs[0]
+                            "detectedLanguage": detected_src_lang
                         }
                     )
                 else:
@@ -738,12 +740,10 @@ def create_app(args):
         if os.path.splitext(file.filename)[1] not in frontend_argos_supported_files_format:
             abort(400, description=_("Invalid request: file format not supported"))
 
-        source_langs = [source_lang]
-        src_langs = [next(iter([l for l in languages if l.code == source_lang]), None) for source_lang in source_langs]
+        src_lang = next(iter([l for l in languages if l.code == source_lang]), None)
 
-        for idx, lang in enumerate(src_langs):
-            if lang is None:
-                abort(400, description=_("%(lang)s is not supported", lang=source_langs[idx]))
+        if src_lang is None:
+            abort(400, description=_("%(lang)s is not supported", lang=source_lang))
 
         tgt_lang = next(iter([l for l in languages if l.code == target_lang]), None)
 
@@ -756,7 +756,7 @@ def create_app(args):
 
             file.save(filepath)
 
-            translated_file_path = argostranslatefiles.translate_file(src_langs[0].get_translation(tgt_lang), filepath)
+            translated_file_path = argostranslatefiles.translate_file(src_lang.get_translation(tgt_lang), filepath)
             translated_filename = os.path.basename(translated_file_path)
 
             return jsonify(
