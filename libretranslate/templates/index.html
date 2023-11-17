@@ -7,7 +7,7 @@
 	{% endfor %}
 	{% if web_version %}
 	<title>LibreTranslate - {{ _h("Free and Open Source Machine Translation API") }} 🌐</title>
-	<meta name="description" content="{{ _h('Free and Open Source Machine Translation API. Self-hosted, offline capable and easy to setup. Run your own API server in just a few minutes.') }}">
+	<meta name="description" content="{{ _h('Free and Open Source Machine Translation API.') }}">
 	<meta name="keywords" content="{{ _h('translation') }},{{ _h('api') }}">
 	{% endif %}
 
@@ -33,16 +33,15 @@
 	<script src="{{ url_for('static', filename='js/vue@2.js') }}"></script>
 
 
-	{% if gaId %}
-	<!-- Global site tag (gtag.js) - Google Analytics -->
-	<script async src="https://www.googletagmanager.com/gtag/js?id={{ gaId }}"></script>
+	<!-- Google tag (gtag.js) -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ49BHF7QW"></script>
 	<script>
-		window.dataLayer = window.dataLayer || [];
-		function gtag(){dataLayer.push(arguments);}
-		gtag('js', new Date());
-		gtag('config', '{{ gaId }}');
+	  window.dataLayer = window.dataLayer || [];
+	  function gtag(){dataLayer.push(arguments);}
+	  gtag('js', new Date());
+
+	  gtag('config', 'G-DQ49BHF7QW');
 	</script>
-	{% endif %}
 
 	<!-- Compiled and minified CSS -->
 	<link rel="stylesheet" href="{{ url_for('static', filename='css/materialize.min.css') }}">
